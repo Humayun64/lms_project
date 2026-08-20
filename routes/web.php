@@ -3,9 +3,15 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CurriculumController;
+use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboard;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboard;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
+use App\Http\Controllers\Student\LearnController;
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
@@ -25,13 +31,30 @@ Route::get('/', function () {
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
+
 /*
 |--------------------------------------------------------------------------
 | Admin Portal
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->group(function () {
-    Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('admin.dashboard');
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [AdminDashboard::class, 'index'])->name('dashboard');
+
+    Route::resource('categories', CategoryController::class);
+    Route::resource('courses', CourseController::class);
+
+    Route::get('courses/{course}/curriculum', [CurriculumController::class, 'index'])->name('curriculum.index');
+    Route::post('courses/{course}/sections', [CurriculumController::class, 'storeSection'])->name('curriculum.sections.store');
+    Route::put('sections/{section}', [CurriculumController::class, 'updateSection'])->name('curriculum.sections.update');
+    Route::delete('sections/{section}', [CurriculumController::class, 'destroySection'])->name('curriculum.sections.destroy');
+    Route::post('sections/{section}/lessons', [CurriculumController::class, 'storeLesson'])->name('curriculum.lessons.store');
+    Route::put('lessons/{lesson}', [CurriculumController::class, 'updateLesson'])->name('curriculum.lessons.update');
+    Route::delete('lessons/{lesson}', [CurriculumController::class, 'destroyLesson'])->name('curriculum.lessons.destroy');
+
+    Route::get('courses/{course}/lessons/{lesson}/quiz', [QuizController::class, 'index'])->name('quiz.index');
+    Route::put('lessons/{lesson}/pass-mark', [QuizController::class, 'updatePassMark'])->name('quiz.passmark');
+    Route::post('lessons/{lesson}/questions', [QuizController::class, 'storeQuestion'])->name('quiz.questions.store');
+    Route::delete('questions/{question}', [QuizController::class, 'destroyQuestion'])->name('quiz.questions.destroy');
 });
 
 /*
@@ -59,4 +82,15 @@ Route::middleware(['auth', 'role:organization'])->prefix('organization')->group(
 */
 Route::middleware(['auth', 'role:student'])->prefix('student')->group(function () {
     Route::get('/dashboard', [StudentDashboard::class, 'index'])->name('student.dashboard');
+
+    // Enroll (free for now)
+    Route::post('courses/{course}/enroll', [LearnController::class, 'enroll'])->name('student.enroll');
+
+    // Player
+    Route::get('courses/{course}/learn', [LearnController::class, 'learn'])->name('student.learn');
+    Route::get('courses/{course}/learn/{lesson}', [LearnController::class, 'learn'])->name('student.learn.lesson');
+
+    // Progress + quiz
+    Route::post('lessons/{lesson}/complete', [LearnController::class, 'complete'])->name('student.lesson.complete');
+    Route::post('lessons/{lesson}/quiz', [LearnController::class, 'submitQuiz'])->name('student.quiz.submit');
 });
