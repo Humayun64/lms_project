@@ -6,21 +6,21 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Batch;
 use App\Models\OfflineRegistration;
+use App\Models\Certificate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class BatchController extends Controller
 {
-    // Manage batches + registrations for an offline course
     public function index(Course $course)
     {
         $course->load('batches.registrations');
         $registrations = OfflineRegistration::where('course_id', $course->id)
-            ->with('batch')->latest()->get();
+            ->with('batch', 'certificate')->latest()->get();
 
         return view('admin.courses.batches', compact('course', 'registrations'));
     }
 
-    // Set how students pay for this offline course
     public function updatePaymentOption(Request $request, Course $course)
     {
         $request->validate(['offline_payment' => ['required', 'in:in_person,online,both']]);
@@ -33,9 +33,7 @@ class BatchController extends Controller
 
     public function storeBatch(Request $request, Course $course)
     {
-        $data = $this->validateBatch($request);
-        $course->batches()->create($data);
-
+        $course->batches()->create($this->validateBatch($request));
         return back()->with('success', 'Batch added.');
     }
 
@@ -87,5 +85,23 @@ class BatchController extends Controller
     {
         $registration->delete();
         return back()->with('success', 'Registration deleted.');
+    }
+
+    // Manually issue a certificate to an offline student
+    public function issueCertificate(OfflineRegistration $registration)
+    {
+        Certificate::firstOrCreate(
+            ['registration_id' => $registration->id],
+            [
+                'user_id'            => $registration->user_id,
+                'course_id'          => $registration->course_id,
+                'recipient_name'     => $registration->name,
+                'source'             => 'offline',
+                'certificate_number' => 'KA-' . now()->year . '-' . strtoupper(Str::random(6)),
+                'issued_at'          => now(),
+            ]
+        );
+
+        return back()->with('success', 'Certificate issued to ' . $registration->name . '.');
     }
 }

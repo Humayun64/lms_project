@@ -10,7 +10,6 @@ use Illuminate\Support\Str;
 
 class CertificateController extends Controller
 {
-    // Show (and issue if needed) the certificate for a completed online course
     public function show(Course $course)
     {
         $user = auth()->user();
@@ -23,7 +22,6 @@ class CertificateController extends Controller
             return redirect()->route('student.dashboard')->with('error', 'This course does not offer an online certificate.');
         }
 
-        // Confirm the course is fully complete
         $course->load('sections.lessons');
         $all = $course->allLessons();
         $completed = $user->completedLessonIds();
@@ -33,17 +31,17 @@ class CertificateController extends Controller
             return redirect()->route('student.learn', $course)->with('error', 'Finish all lessons to unlock your certificate.');
         }
 
-        // Issue if not already
         $certificate = Certificate::firstOrCreate(
-            ['user_id' => $user->id, 'course_id' => $course->id],
+            ['user_id' => $user->id, 'course_id' => $course->id, 'source' => 'online'],
             [
                 'certificate_number' => 'KA-' . now()->year . '-' . strtoupper(Str::random(6)),
                 'issued_at'          => now(),
             ]
         );
 
+        $certificate->load('course', 'user');
         $settings = CertificateSetting::current();
 
-        return view('certificate.show', compact('certificate', 'course', 'user', 'settings'));
+        return view('certificate.show', compact('certificate', 'settings'));
     }
 }

@@ -11,7 +11,9 @@ use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\CertificateController as AdminCertificate;
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboard;
+use App\Http\Controllers\Instructor\CourseController as InstructorCourse;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboard;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\Student\LearnController;
@@ -31,7 +33,6 @@ Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.
 Route::get('/courses/{course}', [PublicCourseController::class, 'show'])->name('courses.show');
 Route::post('/courses/{course}/register', [PublicCourseController::class, 'register'])->name('courses.register');
 
-// Public certificate verification
 Route::get('/verify/{number}', CertificateVerifyController::class)->name('certificate.verify');
 
 /*
@@ -68,12 +69,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('lessons/{lesson}/questions', [QuizController::class, 'storeQuestion'])->name('quiz.questions.store');
     Route::delete('questions/{question}', [QuizController::class, 'destroyQuestion'])->name('quiz.questions.destroy');
 
-    // Certificates
     Route::get('certificates', [AdminCertificate::class, 'index'])->name('certificates.index');
+    Route::get('certificates/{certificate}/print', [AdminCertificate::class, 'print'])->name('certificates.print');
     Route::get('certificate-settings', [AdminCertificate::class, 'settings'])->name('certificate-settings.edit');
     Route::put('certificate-settings', [AdminCertificate::class, 'updateSettings'])->name('certificate-settings.update');
 
-    // Offline batches + registrations
     Route::get('courses/{course}/batches', [BatchController::class, 'index'])->name('batches.index');
     Route::put('courses/{course}/offline-payment', [BatchController::class, 'updatePaymentOption'])->name('batches.payment');
     Route::post('courses/{course}/batches', [BatchController::class, 'storeBatch'])->name('batches.store');
@@ -81,6 +81,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('batches/{batch}', [BatchController::class, 'destroyBatch'])->name('batches.destroy');
     Route::put('registrations/{registration}', [BatchController::class, 'updateRegistration'])->name('registrations.update');
     Route::delete('registrations/{registration}', [BatchController::class, 'destroyRegistration'])->name('registrations.destroy');
+    Route::post('registrations/{registration}/certificate', [BatchController::class, 'issueCertificate'])->name('registrations.certificate');
+
+    Route::get('users', [UserController::class, 'index'])->name('users.index');
+    Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+    Route::post('users', [UserController::class, 'store'])->name('users.store');
+    Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::put('users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle');
+    Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
 });
 
 /*
@@ -88,8 +97,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 | Instructor Portal
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->group(function () {
-    Route::get('/dashboard', [InstructorDashboard::class, 'index'])->name('instructor.dashboard');
+Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
+    Route::get('/dashboard', [InstructorDashboard::class, 'index'])->name('dashboard');
+
+    Route::get('courses', [InstructorCourse::class, 'index'])->name('courses.index');
+    Route::get('courses/create', [InstructorCourse::class, 'create'])->name('courses.create');
+    Route::post('courses', [InstructorCourse::class, 'store'])->name('courses.store');
+    Route::get('courses/{course}/edit', [InstructorCourse::class, 'edit'])->name('courses.edit');
+    Route::put('courses/{course}', [InstructorCourse::class, 'update'])->name('courses.update');
+    Route::delete('courses/{course}', [InstructorCourse::class, 'destroy'])->name('courses.destroy');
 });
 
 /*

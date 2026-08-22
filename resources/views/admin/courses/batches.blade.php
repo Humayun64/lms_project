@@ -58,7 +58,6 @@
         <div class="px-5 py-3 border-b border-gray-200 dark:border-slate-800 font-semibold text-sm text-slate-700 dark:text-slate-200">Batches</div>
         @forelse ($course->batches as $batch)
             <div class="border-b border-gray-100 dark:border-slate-800">
-                {{-- Display row --}}
                 <div class="flex items-center justify-between px-5 py-3 text-sm">
                     <div>
                         <span class="font-medium text-slate-800 dark:text-white">{{ $batch->name }}</span>
@@ -83,7 +82,6 @@
                     </div>
                 </div>
 
-                {{-- Edit form (hidden until Edit clicked) --}}
                 <div id="edit-batch-{{ $batch->id }}" class="hidden px-5 pb-4 bg-gray-50 dark:bg-slate-800/40">
                     <form method="POST" action="{{ route('admin.batches.update', $batch) }}" class="grid grid-cols-1 md:grid-cols-6 gap-3 pt-4">
                         @csrf @method('PUT')
@@ -116,10 +114,9 @@
                     <tr>
                         <th class="px-5 py-3 font-medium">Name</th>
                         <th class="px-5 py-3 font-medium">Contact</th>
-                        <th class="px-5 py-3 font-medium">Batch</th>
-                        <th class="px-5 py-3 font-medium">Payment</th>
                         <th class="px-5 py-3 font-medium">Status</th>
-                        <th class="px-5 py-3 font-medium text-right">Actions</th>
+                        <th class="px-5 py-3 font-medium">Update</th>
+                        <th class="px-5 py-3 font-medium text-right">Certificate</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-100 dark:divide-slate-800">
@@ -128,11 +125,6 @@
                             <td class="px-5 py-3 text-slate-800 dark:text-white">{{ $reg->name }}</td>
                             <td class="px-5 py-3 text-slate-500 dark:text-slate-400">
                                 <div>{{ $reg->email }}</div><div class="text-xs">{{ $reg->phone }}</div>
-                            </td>
-                            <td class="px-5 py-3 text-slate-500 dark:text-slate-400">{{ $reg->batch->name ?? '—' }}</td>
-                            <td class="px-5 py-3">
-                                <span class="text-xs capitalize">{{ str_replace('_', ' ', $reg->payment_method) }}</span>
-                                @if ($reg->paid)<span class="ml-1 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Paid</span>@endif
                             </td>
                             <td class="px-5 py-3">
                                 @php
@@ -144,9 +136,10 @@
                                     };
                                 @endphp
                                 <span class="text-xs px-2 py-1 rounded-full {{ $badge }} capitalize">{{ $reg->status }}</span>
+                                @if ($reg->paid)<span class="ml-1 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Paid</span>@endif
                             </td>
                             <td class="px-5 py-3">
-                                <form method="POST" action="{{ route('admin.registrations.update', $reg) }}" class="flex items-center justify-end gap-2">
+                                <form method="POST" action="{{ route('admin.registrations.update', $reg) }}" class="flex items-center gap-2">
                                     @csrf @method('PUT')
                                     <select name="status" class="rounded-lg border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-xs">
                                         @foreach (['pending','confirmed','completed','cancelled'] as $st)
@@ -156,12 +149,30 @@
                                     <label class="flex items-center gap-1 text-xs text-slate-500">
                                         <input type="checkbox" name="paid" value="1" {{ $reg->paid ? 'checked' : '' }}> Paid
                                     </label>
-                                    <button class="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs">Save</button>
+                                    <button class="bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs">Save</button>
                                 </form>
+                            </td>
+                            <td class="px-5 py-3 text-right">
+                                @if ($reg->certificate)
+                                    <a href="{{ route('admin.certificates.print', $reg->certificate) }}" target="_blank"
+                                       class="inline-flex items-center gap-1 text-green-700 text-xs font-medium">
+                                        <i class="fa-solid fa-circle-check"></i> Issued · Print
+                                    </a>
+                                @elseif ($reg->status === 'completed')
+                                    <form method="POST" action="{{ route('admin.registrations.certificate', $reg) }}"
+                                          onsubmit="return confirm('Issue a certificate to {{ $reg->name }}?');">
+                                        @csrf
+                                        <button class="inline-flex items-center gap-1 bg-indigo-600 text-white px-3 py-1.5 rounded-lg hover:bg-indigo-700 text-xs font-medium">
+                                            <i class="fa-solid fa-certificate"></i> Issue Certificate
+                                        </button>
+                                    </form>
+                                @else
+                                    <span class="text-xs text-slate-400">Mark "completed" to issue</span>
+                                @endif
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="6" class="px-5 py-8 text-center text-slate-400">No registrations yet.</td></tr>
+                        <tr><td colspan="5" class="px-5 py-8 text-center text-slate-400">No registrations yet.</td></tr>
                     @endforelse
                 </tbody>
             </table>

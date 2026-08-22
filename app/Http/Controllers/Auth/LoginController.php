@@ -8,36 +8,40 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    // Show the login form
     public function showLoginForm()
     {
         return view('auth.login');
     }
 
-    // Handle a login attempt
     public function login(Request $request)
     {
-        // Validate the input
         $credentials = $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        // Attempt to log the user in
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
-            $request->session()->regenerate();
 
-            // Send the user to the correct place based on role
+            // Block users whose account is not active
+            if (Auth::user()->status === 'blocked') {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return back()->withErrors([
+                    'email' => 'Your account has been blocked. Please contact support.',
+                ])->onlyInput('email');
+            }
+
+            $request->session()->regenerate();
             return $this->redirectByRole();
         }
 
-        // If login failed, go back with an error
         return back()->withErrors([
             'email' => 'The provided credentials do not match our records.',
         ])->onlyInput('email');
     }
 
-    // Decide where to send the user after login
     protected function redirectByRole()
     {
         $user = Auth::user();
@@ -50,7 +54,6 @@ class LoginController extends Controller
         };
     }
 
-    // Handle logout
     public function logout(Request $request)
     {
         Auth::logout();

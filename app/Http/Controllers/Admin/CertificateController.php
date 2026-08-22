@@ -10,21 +10,26 @@ use Illuminate\Support\Facades\Storage;
 
 class CertificateController extends Controller
 {
-    // List all issued certificates
     public function index()
     {
         $certificates = Certificate::with(['user', 'course'])->latest()->paginate(15);
         return view('admin.certificates.index', compact('certificates'));
     }
 
-    // Show the certificate settings form
+    // Print / view any certificate (admin)
+    public function print(Certificate $certificate)
+    {
+        $certificate->load('course', 'user');
+        $settings = CertificateSetting::current();
+        return view('certificate.show', compact('certificate', 'settings'));
+    }
+
     public function settings()
     {
         $settings = CertificateSetting::current();
         return view('admin.certificates.settings', compact('settings'));
     }
 
-    // Save certificate settings (logo, signature, names)
     public function updateSettings(Request $request)
     {
         $data = $request->validate([

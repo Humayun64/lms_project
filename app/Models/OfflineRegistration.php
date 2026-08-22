@@ -14,7 +14,8 @@ class OfflineRegistration extends Model
 
     protected $casts = ['paid' => 'boolean'];
 
-    public function course() { return $this->belongsTo(Course::class); }
-    public function batch()  { return $this->belongsTo(Batch::class); }
-    public function user()   { return $this->belongsTo(User::class); }
+    public function course()      { return $this->belongsTo(Course::class); }
+    public function batch()       { return $this->belongsTo(Batch::class); }
+    public function user()        { return $this->belongsTo(User::class); }
+    public function certificate() { return $this->hasOne(Certificate::class, 'registration_id'); }
 }

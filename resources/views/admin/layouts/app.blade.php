@@ -41,12 +41,13 @@
             @php
                 $active   = 'flex items-center gap-3 px-3 py-2.5 rounded-lg bg-indigo-600 text-white';
                 $inactive = 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition';
+                $currentRole = request()->routeIs('admin.users.*') ? request('role') : null;
             @endphp
 
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? $active : $inactive }}">
                 <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard
             </a>
-            <a href="{{ route('admin.courses.index') }}" class="{{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.curriculum.*') || request()->routeIs('admin.quiz.*') ? $active : $inactive }}">
+            <a href="{{ route('admin.courses.index') }}" class="{{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.curriculum.*') || request()->routeIs('admin.quiz.*') || request()->routeIs('admin.batches.*') ? $active : $inactive }}">
                 <i class="fa-solid fa-book w-5 text-center"></i> Courses
             </a>
             <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? $active : $inactive }}">
@@ -56,10 +57,20 @@
                 <i class="fa-solid fa-certificate w-5 text-center"></i> Certificates
             </a>
 
+            <a href="{{ route('admin.users.index', ['role' => 'student']) }}" class="{{ request()->routeIs('admin.users.*') && $currentRole === 'student' ? $active : $inactive }}">
+                <i class="fa-solid fa-users w-5 text-center"></i> Students
+            </a>
+            <a href="{{ route('admin.users.index', ['role' => 'instructor']) }}" class="{{ request()->routeIs('admin.users.*') && $currentRole === 'instructor' ? $active : $inactive }}">
+                <i class="fa-solid fa-chalkboard-user w-5 text-center"></i> Instructors
+            </a>
+            <a href="{{ route('admin.users.index', ['role' => 'organization']) }}" class="{{ request()->routeIs('admin.users.*') && $currentRole === 'organization' ? $active : $inactive }}">
+                <i class="fa-solid fa-building w-5 text-center"></i> Organizations
+            </a>
+            <a href="{{ route('admin.users.index') }}" class="{{ request()->routeIs('admin.users.*') && !$currentRole ? $active : $inactive }}">
+                <i class="fa-solid fa-user-gear w-5 text-center"></i> All Users
+            </a>
+
             {{-- Wired up as we build each module --}}
-            <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-users w-5 text-center"></i> Students</a>
-            <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-chalkboard-user w-5 text-center"></i> Instructors</a>
-            <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-building w-5 text-center"></i> Organizations</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-cart-shopping w-5 text-center"></i> Orders</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-ticket w-5 text-center"></i> Coupons</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Reports</a>
