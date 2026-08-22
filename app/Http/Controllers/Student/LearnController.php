@@ -7,7 +7,9 @@ use App\Models\Course;
 use App\Models\Lesson;
 use App\Models\Enrollment;
 use App\Models\LessonCompletion;
+use App\Models\Certificate;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class LearnController extends Controller
 {
@@ -41,12 +43,10 @@ class LearnController extends Controller
             ]);
         }
 
-        // Default to the first lesson if none specified
         if (!$lesson) {
             $lesson = $allLessons->first();
         }
 
-        // Make sure the lesson belongs to this course
         if (!$allLessons->contains('id', $lesson->id)) {
             abort(404);
         }
@@ -56,12 +56,10 @@ class LearnController extends Controller
         $done  = $allLessons->whereIn('id', $completedIds)->count();
         $progress = $total ? round($done / $total * 100) : 0;
 
-        // Prev / next lesson for navigation
         $index = $allLessons->search(fn ($l) => $l->id === $lesson->id);
         $prev  = $index > 0 ? $allLessons[$index - 1] : null;
         $next  = $index < $total - 1 ? $allLessons[$index + 1] : null;
 
-        // Load quiz questions if this is a quiz lesson
         if ($lesson->type === 'quiz') {
             $lesson->load('questions.options');
         }
@@ -77,8 +75,9 @@ class LearnController extends Controller
             ['completed_at' => now()]
         );
 
-        // Go to the next lesson if there is one
         $course = $lesson->section->course;
+        $this->issueCertificateIfComplete($course, auth()->user());
+
         $course->load('sections.lessons');
         $all = $course->allLessons()->values();
         $index = $all->search(fn ($l) => $l->id === $lesson->id);
@@ -116,6 +115,7 @@ class LearnController extends Controller
                 ['user_id' => auth()->id(), 'lesson_id' => $lesson->id],
                 ['completed_at' => now()]
             );
+            $this->issueCertificateIfComplete($lesson->section->course, auth()->user());
         }
 
         $course = $lesson->section->course;
@@ -125,5 +125,33 @@ class LearnController extends Controller
             ->with('quiz_result', [
                 'score' => $score, 'passed' => $passed, 'correct' => $correct, 'total' => $total, 'pass_mark' => $passMark,
             ]);
+    }
+
+    // Auto-issue a certificate when an ONLINE course is fully complete
+    private function issueCertificateIfComplete(Course $course, $user): void
+    {
+        // Only online courses that offer a certificate
+        if ($course->type !== 'online' || !$course->certificate) {
+            return;
+        }
+
+        $course->load('sections.lessons');
+        $all = $course->allLessons();
+        if ($all->isEmpty()) {
+            return;
+        }
+
+        $completed = $user->completedLessonIds();
+        $allDone = $all->pluck('id')->every(fn ($id) => in_array($id, $completed));
+
+        if ($allDone) {
+            Certificate::firstOrCreate(
+                ['user_id' => $user->id, 'course_id' => $course->id],
+                [
+                    'certificate_number' => 'KA-' . now()->year . '-' . strtoupper(Str::random(6)),
+                    'issued_at'          => now(),
+                ]
+            );
+        }
     }
 }

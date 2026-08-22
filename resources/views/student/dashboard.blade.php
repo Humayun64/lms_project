@@ -36,10 +36,19 @@
                             <div class="w-full h-2 bg-gray-100 rounded-full mb-3">
                                 <div class="h-2 bg-indigo-600 rounded-full" style="width: {{ $course->progress }}%"></div>
                             </div>
+
                             <a href="{{ route('student.learn', $course) }}"
                                class="block text-center bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition text-sm font-medium">
                                 {{ $course->progress > 0 ? 'Continue' : 'Start Learning' }}
                             </a>
+
+                            {{-- Certificate button: online course, 100% complete --}}
+                            @if ($course->progress == 100 && $course->type === 'online' && $course->certificate)
+                                <a href="{{ route('student.certificate', $course) }}"
+                                   class="block text-center mt-2 border border-green-600 text-green-700 py-2 rounded-lg hover:bg-green-50 transition text-sm font-medium">
+                                    <i class="fa-solid fa-certificate mr-1"></i> View Certificate
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

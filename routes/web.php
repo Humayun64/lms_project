@@ -2,15 +2,18 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CertificateVerifyController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\QuizController;
+use App\Http\Controllers\Admin\CertificateController as AdminCertificate;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboard;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboard;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
 use App\Http\Controllers\Student\LearnController;
+use App\Http\Controllers\Student\CertificateController as StudentCertificate;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,6 +24,9 @@ use App\Http\Controllers\Student\LearnController;
 Route::get('/', function () {
     return view('welcome');
 });
+
+// Public certificate verification
+Route::get('/verify/{number}', CertificateVerifyController::class)->name('certificate.verify');
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +61,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('lessons/{lesson}/pass-mark', [QuizController::class, 'updatePassMark'])->name('quiz.passmark');
     Route::post('lessons/{lesson}/questions', [QuizController::class, 'storeQuestion'])->name('quiz.questions.store');
     Route::delete('questions/{question}', [QuizController::class, 'destroyQuestion'])->name('quiz.questions.destroy');
+
+    // Certificates
+    Route::get('certificates', [AdminCertificate::class, 'index'])->name('certificates.index');
+    Route::get('certificate-settings', [AdminCertificate::class, 'settings'])->name('certificate-settings.edit');
+    Route::put('certificate-settings', [AdminCertificate::class, 'updateSettings'])->name('certificate-settings.update');
 });
 
 /*
@@ -83,14 +94,14 @@ Route::middleware(['auth', 'role:organization'])->prefix('organization')->group(
 Route::middleware(['auth', 'role:student'])->prefix('student')->group(function () {
     Route::get('/dashboard', [StudentDashboard::class, 'index'])->name('student.dashboard');
 
-    // Enroll (free for now)
     Route::post('courses/{course}/enroll', [LearnController::class, 'enroll'])->name('student.enroll');
 
-    // Player
     Route::get('courses/{course}/learn', [LearnController::class, 'learn'])->name('student.learn');
     Route::get('courses/{course}/learn/{lesson}', [LearnController::class, 'learn'])->name('student.learn.lesson');
 
-    // Progress + quiz
     Route::post('lessons/{lesson}/complete', [LearnController::class, 'complete'])->name('student.lesson.complete');
     Route::post('lessons/{lesson}/quiz', [LearnController::class, 'submitQuiz'])->name('student.quiz.submit');
+
+    // Certificate (view / print)
+    Route::get('courses/{course}/certificate', [StudentCertificate::class, 'show'])->name('student.certificate');
 });

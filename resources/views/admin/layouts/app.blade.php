@@ -25,7 +25,6 @@
 
 <div class="flex min-h-screen">
 
-    {{-- ===================== SIDEBAR ===================== --}}
     <aside id="sidebar"
            class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-slate-300
                   transform -translate-x-full lg:translate-x-0 transition-transform duration-200
@@ -44,28 +43,24 @@
                 $inactive = 'flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition';
             @endphp
 
-            <a href="{{ route('admin.dashboard') }}"
-               class="{{ request()->routeIs('admin.dashboard') ? $active : $inactive }}">
+            <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? $active : $inactive }}">
                 <i class="fa-solid fa-gauge-high w-5 text-center"></i> Dashboard
             </a>
-
-            <a href="{{ route('admin.courses.index') }}"
-               class="{{ request()->routeIs('admin.courses.*') ? $active : $inactive }}">
+            <a href="{{ route('admin.courses.index') }}" class="{{ request()->routeIs('admin.courses.*') || request()->routeIs('admin.curriculum.*') || request()->routeIs('admin.quiz.*') ? $active : $inactive }}">
                 <i class="fa-solid fa-book w-5 text-center"></i> Courses
             </a>
-
-            <a href="{{ route('admin.categories.index') }}"
-               class="{{ request()->routeIs('admin.categories.*') ? $active : $inactive }}">
+            <a href="{{ route('admin.categories.index') }}" class="{{ request()->routeIs('admin.categories.*') ? $active : $inactive }}">
                 <i class="fa-solid fa-layer-group w-5 text-center"></i> Categories
             </a>
+            <a href="{{ route('admin.certificates.index') }}" class="{{ request()->routeIs('admin.certificates.*') || request()->routeIs('admin.certificate-settings.*') ? $active : $inactive }}">
+                <i class="fa-solid fa-certificate w-5 text-center"></i> Certificates
+            </a>
 
-            {{-- These links will be wired up as we build each module --}}
-            <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-list-check w-5 text-center"></i> Curriculum</a>
+            {{-- Wired up as we build each module --}}
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-users w-5 text-center"></i> Students</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-chalkboard-user w-5 text-center"></i> Instructors</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-building w-5 text-center"></i> Organizations</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-cart-shopping w-5 text-center"></i> Orders</a>
-            <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-certificate w-5 text-center"></i> Certificates</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-ticket w-5 text-center"></i> Coupons</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-chart-line w-5 text-center"></i> Reports</a>
             <a href="#" class="{{ $inactive }}"><i class="fa-solid fa-gear w-5 text-center"></i> Settings</a>
@@ -74,47 +69,38 @@
         <div class="p-3 border-t border-slate-800">
             <form method="POST" action="{{ route('logout') }}">
                 @csrf
-                <button type="submit"
-                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-slate-800 transition text-sm">
+                <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-red-400 hover:bg-slate-800 transition text-sm">
                     <i class="fa-solid fa-right-from-bracket w-5 text-center"></i> Logout
                 </button>
             </form>
         </div>
     </aside>
 
-    <div id="overlay" onclick="toggleSidebar()"
-         class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 z-30 hidden lg:hidden"></div>
 
-    {{-- ===================== MAIN AREA ===================== --}}
     <div class="flex-1 flex flex-col min-w-0">
 
-        <header class="h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800
-                       flex items-center gap-4 px-4 lg:px-6 sticky top-0 z-20">
-
+        <header class="h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center gap-4 px-4 lg:px-6 sticky top-0 z-20">
             <button onclick="toggleSidebar()" class="lg:hidden text-slate-500 dark:text-slate-400">
                 <i class="fa-solid fa-bars text-lg"></i>
             </button>
 
             <div class="hidden sm:flex items-center gap-2 bg-gray-100 dark:bg-slate-800 rounded-lg px-3 py-2 w-64">
                 <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
-                <input type="text" placeholder="Search..."
-                       class="bg-transparent outline-none text-sm w-full text-slate-700 dark:text-slate-200 placeholder-slate-400">
+                <input type="text" placeholder="Search..." class="bg-transparent outline-none text-sm w-full text-slate-700 dark:text-slate-200 placeholder-slate-400">
             </div>
 
             <div class="ml-auto flex items-center gap-4 text-slate-500 dark:text-slate-400">
                 <span class="hidden sm:flex items-center gap-1 text-sm cursor-pointer hover:text-slate-700 dark:hover:text-slate-200">
                     <i class="fa-solid fa-globe"></i> EN
                 </span>
-
                 <button onclick="toggleTheme()" class="hover:text-slate-700 dark:hover:text-slate-200" title="Toggle theme">
                     <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
                 </button>
-
                 <button class="relative hover:text-slate-700 dark:hover:text-slate-200">
                     <i class="fa-solid fa-bell text-lg"></i>
                     <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full w-4 h-4 flex items-center justify-center">5</span>
                 </button>
-
                 <div class="flex items-center gap-2">
                     <div class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-semibold">
                         {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
@@ -127,11 +113,9 @@
         <main class="flex-1 p-4 lg:p-6">
             @if (session('success'))
                 <div class="mb-5 flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm">
-                    <i class="fa-solid fa-circle-check"></i>
-                    {{ session('success') }}
+                    <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
                 </div>
             @endif
-
             @yield('content')
         </main>
     </div>
