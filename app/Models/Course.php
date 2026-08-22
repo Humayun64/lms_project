@@ -12,6 +12,7 @@ class Course extends Model
         'title',
         'slug',
         'type',
+        'offline_payment',
         'level',
         'language',
         'duration',
@@ -52,7 +53,16 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
-    // All lessons across all sections (flat)
+    public function batches()
+    {
+        return $this->hasMany(Batch::class)->latest();
+    }
+
+    public function offlineRegistrations()
+    {
+        return $this->hasMany(OfflineRegistration::class);
+    }
+
     public function allLessons()
     {
         return $this->sections->flatMap->lessons;

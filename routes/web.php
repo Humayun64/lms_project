@@ -3,12 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\CertificateVerifyController;
+use App\Http\Controllers\PublicCourseController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboard;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CurriculumController;
 use App\Http\Controllers\Admin\QuizController;
 use App\Http\Controllers\Admin\CertificateController as AdminCertificate;
+use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Instructor\DashboardController as InstructorDashboard;
 use App\Http\Controllers\Organization\DashboardController as OrganizationDashboard;
 use App\Http\Controllers\Student\DashboardController as StudentDashboard;
@@ -17,13 +19,17 @@ use App\Http\Controllers\Student\CertificateController as StudentCertificate;
 
 /*
 |--------------------------------------------------------------------------
-| Public Routes
+| Public Routes (visible to everyone)
 |--------------------------------------------------------------------------
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('courses.index');
 });
+
+Route::get('/courses', [PublicCourseController::class, 'index'])->name('courses.index');
+Route::get('/courses/{course}', [PublicCourseController::class, 'show'])->name('courses.show');
+Route::post('/courses/{course}/register', [PublicCourseController::class, 'register'])->name('courses.register');
 
 // Public certificate verification
 Route::get('/verify/{number}', CertificateVerifyController::class)->name('certificate.verify');
@@ -66,6 +72,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('certificates', [AdminCertificate::class, 'index'])->name('certificates.index');
     Route::get('certificate-settings', [AdminCertificate::class, 'settings'])->name('certificate-settings.edit');
     Route::put('certificate-settings', [AdminCertificate::class, 'updateSettings'])->name('certificate-settings.update');
+
+    // Offline batches + registrations
+    Route::get('courses/{course}/batches', [BatchController::class, 'index'])->name('batches.index');
+    Route::put('courses/{course}/offline-payment', [BatchController::class, 'updatePaymentOption'])->name('batches.payment');
+    Route::post('courses/{course}/batches', [BatchController::class, 'storeBatch'])->name('batches.store');
+    Route::put('batches/{batch}', [BatchController::class, 'updateBatch'])->name('batches.update');
+    Route::delete('batches/{batch}', [BatchController::class, 'destroyBatch'])->name('batches.destroy');
+    Route::put('registrations/{registration}', [BatchController::class, 'updateRegistration'])->name('registrations.update');
+    Route::delete('registrations/{registration}', [BatchController::class, 'destroyRegistration'])->name('registrations.destroy');
 });
 
 /*
@@ -95,13 +110,9 @@ Route::middleware(['auth', 'role:student'])->prefix('student')->group(function (
     Route::get('/dashboard', [StudentDashboard::class, 'index'])->name('student.dashboard');
 
     Route::post('courses/{course}/enroll', [LearnController::class, 'enroll'])->name('student.enroll');
-
     Route::get('courses/{course}/learn', [LearnController::class, 'learn'])->name('student.learn');
     Route::get('courses/{course}/learn/{lesson}', [LearnController::class, 'learn'])->name('student.learn.lesson');
-
     Route::post('lessons/{lesson}/complete', [LearnController::class, 'complete'])->name('student.lesson.complete');
     Route::post('lessons/{lesson}/quiz', [LearnController::class, 'submitQuiz'])->name('student.quiz.submit');
-
-    // Certificate (view / print)
     Route::get('courses/{course}/certificate', [StudentCertificate::class, 'show'])->name('student.certificate');
 });

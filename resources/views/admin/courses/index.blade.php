@@ -67,10 +67,23 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
-                                    <a href="{{ route('admin.curriculum.index', $course) }}"
-                                       class="inline-flex items-center gap-1 px-3 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition text-xs font-medium" title="Curriculum">
-                                        <i class="fa-solid fa-list-check text-xs"></i> Curriculum
+                                    {{-- View public page --}}
+                                    <a href="{{ route('courses.show', $course) }}" target="_blank"
+                                       class="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition" title="View public page">
+                                        <i class="fa-solid fa-eye text-xs"></i>
                                     </a>
+                                    {{-- Curriculum / Module list --}}
+                                    <a href="{{ route('admin.curriculum.index', $course) }}"
+                                       class="inline-flex items-center gap-1 px-3 h-8 rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition text-xs font-medium" title="Curriculum / Modules">
+                                        <i class="fa-solid fa-list-check text-xs"></i> {{ $course->type === 'offline' ? 'Modules' : 'Curriculum' }}
+                                    </a>
+                                    {{-- Batches (offline only) --}}
+                                    @if ($course->type === 'offline')
+                                        <a href="{{ route('admin.batches.index', $course) }}"
+                                           class="inline-flex items-center gap-1 px-3 h-8 rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-100 transition text-xs font-medium" title="Batches & registrations">
+                                            <i class="fa-solid fa-calendar-days text-xs"></i> Batches
+                                        </a>
+                                    @endif
                                     <a href="{{ route('admin.courses.edit', $course) }}"
                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition" title="Edit">
                                         <i class="fa-solid fa-pen text-xs"></i>
